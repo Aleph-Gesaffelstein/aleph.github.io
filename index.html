@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>ECharts 嵌入示例</title>
+  <!-- 1. 引入 ECharts 库（通过 CDN，无需本地下载） -->
+  <script src="echarts.min.js"></script>
+  <style>
+    /* 2. 给图表容器设置宽高（必须，否则图表无法显示） */ 
+    #main {
+      width: 90%;
+      height: 80vh; /* 占视口高度的80%，可根据需求调整 */
+      margin: 0 auto;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- 3. 准备图表容器（一个 div 元素） -->
+  <div id="main"></div>
+
+  <!-- 4. 编写 ECharts 初始化代码 -->
+  <script>
+    // 内置数据
+    const lifeExpectancyData = [
+      ["Year", "Country", "Life Expectancy", "Income", "Population"],
+      [1950, "Finland", 61.4, 4049, 4099947],
+      [1960, "Finland", 65.6, 5587, 4443272],
+      [1970, "Finland", 68.5, 9734, 4605994],
+      [1980, "Finland", 70.7, 12903, 4780422],
+      [1990, "Finland", 72.7, 18282, 4974821],
+      [2000, "Finland", 76.1, 23172, 5171114],
+      [2010, "Finland", 79.3, 31399, 5374573],
+      
+      [1950, "France", 55.2, 5126, 41834413],
+      [1960, "France", 62.3, 7277, 45654966],
+      [1970, "France", 65.8, 12973, 50755236],
+      [1980, "France", 70.0, 16881, 53721937],
+      [1990, "France", 73.0, 22830, 56295000],
+      [2000, "France", 77.7, 26425, 58895841],
+      [2010, "France", 81.1, 30096, 64768389],
+      
+      [1950, "Germany", 65.5, 4281, 68374989],
+      [1960, "Germany", 69.1, 7146, 72816247],
+      [1970, "Germany", 70.6, 13147, 78717088],
+      [1980, "Germany", 72.0, 18433, 78383822],
+      [1990, "Germany", 73.2, 24651, 80597764],
+      [2000, "Germany", 77.4, 25660, 82282988],
+      [2010, "Germany", 80.1, 30416, 81799600],
+      
+      [1950, "Iceland", 65.6, 4267, 145592],
+      [1960, "Iceland", 70.1, 6281, 177713],
+      [1970, "Iceland", 71.9, 13461, 209125],
+      [1980, "Iceland", 74.2, 17978, 228978],
+      [1990, "Iceland", 76.5, 24275, 255281],
+      [2000, "Iceland", 79.4, 30870, 279384],
+      [2010, "Iceland", 81.8, 36181, 318452],
+      
+      [1950, "Norway", 63.4, 4751, 3272308],
+      [1960, "Norway", 68.0, 7208, 3584493],
+      [1970, "Norway", 70.7, 16075, 3874475],
+      [1980, "Norway", 73.4, 21651, 4091753],
+      [1990, "Norway", 75.1, 30870, 4241966],
+      [2000, "Norway", 78.9, 44475, 4525116],
+      [2010, "Norway", 81.0, 52964, 4888000],
+      
+      [1950, "Poland", 50.5, 2880, 24824000],
+      [1960, "Poland", 55.4, 3883, 29774000],
+      [1970, "Poland", 60.4, 6167, 32665000],
+      [1980, "Poland", 64.4, 8521, 35731000],
+      [1990, "Poland", 65.3, 9895, 38005000],
+      [2000, "Poland", 71.2, 11760, 38625478],
+      [2010, "Poland", 75.5, 15399, 38500000],
+      
+      [1950, "Russia", 44.0, 3018, 102798657],
+      [1960, "Russia", 63.0, 5339, 119865000],
+      [1970, "Russia", 65.0, 9932, 130123000],
+      [1980, "Russia", 65.0, 11439, 146340000],
+      [1990, "Russia", 64.0, 10115, 148244000],
+      [2000, "Russia", 65.3, 9111, 145166731],
+      [2010, "Russia", 65.5, 16139, 142856536],
+      
+      [1950, "United Kingdom", 65.8, 6847, 50363000],
+      [1960, "United Kingdom", 68.9, 10458, 52407000],
+      [1970, "United Kingdom", 70.2, 15138, 55635000],
+      [1980, "United Kingdom", 71.4, 16885, 56299300],
+      [1990, "United Kingdom", 74.0, 20960, 57411000],
+      [2000, "United Kingdom", 77.2, 26797, 58808200],
+      [2010, "United Kingdom", 79.7, 32500, 62041708]
+    ];
+
+    // 初始化图表
+    var chartDom = document.getElementById('main');
+    var myChart = echarts.init(chartDom);
+    var option;
+
+    // 渲染图表
+    run(lifeExpectancyData);
+
+    function run(_rawData) {
+      const countries = [
+        'Finland', 'France', 'Germany', 'Iceland', 
+        'Norway', 'Poland', 'Russia', 'United Kingdom'
+      ];
+      const datasetWithFilters = [];
+      const seriesList = [];
+
+      echarts.util.each(countries, function (country) {
+        var datasetId = 'dataset_' + country;
+        datasetWithFilters.push({
+          id: datasetId,
+          fromDatasetId: 'dataset_raw',
+          transform: {
+            type: 'filter',
+            config: {
+              and: [
+                { dimension: 'Year', gte: 1950 },
+                { dimension: 'Country', '=': country }
+              ]
+            }
+          }
+        });
+        seriesList.push({
+          type: 'line',
+          datasetId: datasetId,
+          showSymbol: false,
+          name: country,
+          endLabel: {
+            show: false // 已关闭终点标签
+          },
+          labelLayout: {
+            moveOverlap: 'shiftY'
+          },
+          emphasis: {
+            focus: 'series'
+          },
+          encode: {
+            x: 'Year',
+            y: 'Income',
+            label: ['Country', 'Income'],
+            itemName: 'Year',
+            tooltip: ['Income']
+          }
+        });
+      });
+
+      option = {
+        animationDuration: 1000,
+        dataset: [
+          {
+            id: 'dataset_raw',
+            source: _rawData
+          },
+          ...datasetWithFilters
+        ],
+        title: {
+          text: 'Income of European Countries since 1950'
+        },
+        tooltip: {
+          order: 'valueDesc',
+          trigger: 'axis'
+        },
+        xAxis: {
+          type: 'category',
+          nameLocation: 'middle'
+        },
+        yAxis: {
+          name: 'Income'
+        },
+        grid: {
+          right: '5%', // 右侧留白改为百分比，适应不同宽度
+          left: '5%',
+          bottom: '5%',
+          containLabel: true
+        },
+        series: seriesList
+      };
+
+      myChart.setOption(option);
+    }
+
+    // 2. 关键：监听窗口大小变化，调用resize()实现自适应
+    window.addEventListener('resize',() => myChart.resize());
+    option && myChart.setOption(option);
+  </script>
+</body>
+</html>
