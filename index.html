@@ -1,98 +1,219 @@
-<html lang="en"><head>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
     <meta charset="UTF-8">
+    <title>可配置化 ECharts 柱状图</title>
+    <!-- 引入 ECharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <style>
-        body {
-            overflow: hidden;
+        /* 容器样式也可通过JS配置，这里保留基础样式 */
+        #chart-container {
+            margin: 20px auto;
+            border: 1px solid #eee;
         }
-
-        html,
-        body {
-            position: relative;
-            background: #d4dfe6;
-            min-height: 100%;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #274c5e;
-        }
-
-        .Container {
-            text-align: center;
-            position: relative;
-        }
-
-        .MainTitle {
-            display: block;
-            font-size: 2rem;
-            font-weight: lighter;
-            text-align: center;
-        }
-
-        .MainDescription {
-            max-width: 50%;
-            font-size: 1.2rem;
-            font-weight: lighter;
-        }
-
-        .MainGraphic {
-            position: relative;
-        }
-        .Cog {
-            width: 10rem;
-            height: 10rem;
-            fill: #6aafe6;
-            animation: CogAnimation 5s infinite;
-        }
-        .Hummingbird {
-            position: absolute;
-            width: 3rem;
-            height: 3rem;
-            fill: #30a9de;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-        }
-        @keyframes CogAnimation {
-            0% {
-                transform: rotate(0deg);
-            }
-            50% {
-                transform: rotate(360deg);
-            }
-            100% {
-                transform: rotate(0deg);
-            }
-        }
-
     </style>
 </head>
-
 <body>
+    <div id="chart-container"></div>
 
-<div class="Container">
+    <script type="text/javascript">
+        // ===================== 核心配置参数（所有修改都在这里！） =====================
+        const CHART_CONFIG = {
+            // 1. 图表容器配置
+            container: {
+                id: 'chart-container',  // 容器ID
+                width: '90%',        // 宽度（支持px/%）
+                height: '90vh',        // 高度（支持px/%）
+                margin: '20px auto'     // 外边距
+            },
 
-    <div class="MainGraphic">
-        <svg class="Hummingbird" viewBox="0 0 55 41" xmlns="http://www.w3.org/2000/svg">
-            <path d="M35.5 5L54.7.6H32.3L35.5 5zM12.4 40.8l10.3-10.1-6.2-6.7-4.1 16.8zM33.8 5.3L30.5.8l-5.4 4 8.7.5zM20.8 4.6L8.8 0l1.9 4.1 10.1.5zM0 5l15.2 15.4 7.5-14.2L0 5zM34.2 6.8l-9.9-.5-8 15.2 7.4 8.1 8-7.9 2.5-14.9z"></path>
-        </svg>
+            // 2. 标签文本配置（柱子上的文字）
+            label: {
+                show: true,             // 是否显示标签
+                rotate: 90,             // 文字旋转角度（-90~90）
+                align: 'left',          // 水平对齐：left/center/right
+                verticalAlign: 'middle',// 垂直对齐：top/middle/bottom
+                position: 'insideBottom',// 标签位置：top/bottom/inside/insideTop等
+                distance: 15,           // 标签与柱子的距离
+                fontSize: 16,           // 文字大小
+                formatter: '{c}  {name|{a}}', // 标签格式：{c}=值 {a}=系列名 {b}=类目名
+                richStyle: {            // 富文本样式（针对formatter里的name）
+                    name: { color: '#333', fontWeight: 'normal' }
+                }
+            },
 
-        <svg class="Cog" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-            <path d="M29.18 19.07c-1.678-2.908-.668-6.634 2.256-8.328L28.29 5.295c-.897.527-1.942.83-3.057.83-3.36 0-6.085-2.743-6.085-6.126h-6.29c.01 1.043-.25 2.102-.81 3.07-1.68 2.907-5.41 3.896-8.34 2.21L.566 10.727c.905.515 1.69 1.268 2.246 2.234 1.677 2.904.673 6.624-2.24 8.32l3.145 5.447c.895-.522 1.935-.82 3.044-.82 3.35 0 6.066 2.725 6.083 6.092h6.29c-.004-1.035.258-2.08.81-3.04 1.676-2.902 5.4-3.893 8.325-2.218l3.145-5.447c-.9-.515-1.678-1.266-2.232-2.226zM16 22.48c-3.578 0-6.48-2.902-6.48-6.48S12.423 9.52 16 9.52c3.578 0 6.48 2.902 6.48 6.48s-2.902 6.48-6.48 6.48z"></path>
-        </svg>
+            // 3. 图例配置
+            legend: {
+                show: true,             // 是否显示图例
+                data: ['语文', '数学', '英语'], // 图例名称（需和series.name对应）
+                position: {             // 图例位置
+                    left: 'center',     // 水平：left/center/right/数值
+                    top: 'top'          // 垂直：top/middle/bottom/数值
+                },
+                textStyle: {            // 图例文字样式
+                    fontSize: 14,
+                    color: '#666'
+                }
+            },
 
-    </div>
+            // 4. 工具栏配置
+            toolbox: {
+                show: true,             // 是否显示工具栏
+                orient: 'vertical',     // 排列方向：horizontal/vertical
+                position: {             // 工具栏位置
+                    left: 'right',
+                    top: 'center'
+                },
+                // 工具栏功能开关（按需开启/关闭）
+                feature: {
+                    mark: { show: true },        // 标记工具
+                    dataView: { show: true, readOnly: false }, // 数据视图
+                    magicType: { show: true, type: ['line', 'bar', 'stack'] }, // 图表类型切换
+                    restore: { show: true },     // 重置
+                    saveAsImage: { show: true }  // 保存图片
+                }
+            },
 
-    
-    <h1 class="MainTitle" style="font-weight: bolder">
-        网站维护中...
-    </h1>
-    <div class="Main Description">
-        <p>为了让您更好的使用系统，我们正在对服务器进行升级，升级期间暂时无法访问。 给您带来的不便，敬请谅解！</p>
-    </div>
-</div>
+            // 5. 提示框（鼠标悬停提示）配置
+            tooltip: {
+                trigger: 'axis',        // 触发方式：axis/item
+                axisPointer: { type: 'shadow' }, // 指示器类型：shadow/line/cross
+                textStyle: { fontSize: 12 },
+                backgroundColor: 'rgba(50,50,50,0.8)', // 背景色
+                textColor: '#fff'       // 文字颜色
+            },
 
+            // 6. X轴配置
+            xAxis: {
+                type: 'category',       // 轴类型：category/value/time
+                axisTick: { show: false }, // 是否显示刻度线
+                axisLine: { show: true },  // 是否显示轴线
+                label: {                // 轴标签样式
+                    fontSize: 14,
+                    color: '#333'
+                },
+                data: ['2025.10', '2025.11', '2025.12', '2026.1'] // X轴类目数据
+            },
 
+            // 7. Y轴配置
+            yAxis: {
+                type: 'value',          // 轴类型：value/category/time
+                axisTick: { show: true },
+                axisLine: { show: true },
+                label: {
+                    fontSize: 14,
+                    color: '#333'
+                },
+                splitLine: { show: true } // 是否显示网格线
+            },
 
+            // 8. 系列数据配置（柱状图核心数据）
+            series: {
+                type: 'bar',            // 图表类型：bar/line/pie等
+                barGap: 0,              // 同系列柱子间距
+                emphasis: { focus: 'series' }, // 高亮方式：series/item
+                // 各系列数据（name需和legend.data对应）
+                dataList: [
+                    { name: '语文', data: [(0.83*81).toFixed(2) ,(0.83*67.5).toFixed(2), (0.83*89).toFixed(2), (0.83*70).toFixed(2) ] },
+                    { name: '数学', data: [(0.83*109).toFixed(2), (0.83*97).toFixed(2), (0.83*100).toFixed(2), (0.83*102).toFixed(2) ] },
+                    { name: '英语', data: [150, 232, 201, 154 ] }
+                ]
+            }
+        };
+        // ===================== 配置结束（以下代码无需修改） =====================
 
-</body></html>
+        // 1. 初始化容器样式（从配置读取）
+        const container = document.getElementById(CHART_CONFIG.container.id);
+        container.style.width = CHART_CONFIG.container.width;
+        container.style.height = CHART_CONFIG.container.height;
+
+        // 2. 初始化ECharts实例
+        const myChart = echarts.init(container);
+
+        // 3. 组装标签配置（从核心配置读取）
+        const labelOption = {
+            show: CHART_CONFIG.label.show,
+            rotate: CHART_CONFIG.label.rotate,
+            align: CHART_CONFIG.label.align,
+            verticalAlign: CHART_CONFIG.label.verticalAlign,
+            position: CHART_CONFIG.label.position,
+            distance: CHART_CONFIG.label.distance,
+            fontSize: CHART_CONFIG.label.fontSize,
+            formatter: CHART_CONFIG.label.formatter,
+            rich: CHART_CONFIG.label.richStyle
+        };
+
+        // 4. 组装完整的图表配置项
+        const chartOption = {
+            // 提示框配置
+            tooltip: {
+                trigger: CHART_CONFIG.tooltip.trigger,
+                axisPointer: { type: CHART_CONFIG.tooltip.axisPointer.type },
+                textStyle: {
+                    fontSize: CHART_CONFIG.tooltip.textStyle.fontSize,
+                    color: CHART_CONFIG.tooltip.textColor
+                },
+                backgroundColor: CHART_CONFIG.tooltip.backgroundColor
+            },
+
+            // 图例配置
+            legend: {
+                show: CHART_CONFIG.legend.show,
+                data: CHART_CONFIG.legend.data,
+                left: CHART_CONFIG.legend.position.left,
+                top: CHART_CONFIG.legend.position.top,
+                textStyle: CHART_CONFIG.legend.textStyle
+            },
+
+            // 工具栏配置
+            toolbox: {
+                show: CHART_CONFIG.toolbox.show,
+                orient: CHART_CONFIG.toolbox.orient,
+                left: CHART_CONFIG.toolbox.position.left,
+                top: CHART_CONFIG.toolbox.position.top,
+                feature: CHART_CONFIG.toolbox.feature
+            },
+
+            // X轴配置
+            xAxis: [
+                {
+                    type: CHART_CONFIG.xAxis.type,
+                    axisTick: { show: CHART_CONFIG.xAxis.axisTick.show },
+                    axisLine: { show: CHART_CONFIG.xAxis.axisLine.show },
+                    axisLabel: CHART_CONFIG.xAxis.label,
+                    data: CHART_CONFIG.xAxis.data
+                }
+            ],
+
+            // Y轴配置
+            yAxis: [
+                {
+                    type: CHART_CONFIG.yAxis.type,
+                    axisTick: { show: CHART_CONFIG.yAxis.axisTick.show },
+                    axisLine: { show: CHART_CONFIG.yAxis.axisLine.show },
+                    axisLabel: CHART_CONFIG.yAxis.label,
+                    splitLine: { show: CHART_CONFIG.yAxis.splitLine.show }
+                }
+            ],
+
+            // 系列数据配置（自动遍历数据列表）
+            series: CHART_CONFIG.series.dataList.map(item => ({
+                name: item.name,
+                type: CHART_CONFIG.series.type,
+                barGap: CHART_CONFIG.series.barGap,
+                label: labelOption,
+                emphasis: CHART_CONFIG.series.emphasis,
+                data: item.data
+            }))
+        };
+
+        // 5. 渲染图表
+        myChart.setOption(chartOption);
+
+        // 6. 监听窗口大小变化，自动适配
+        window.addEventListener('resize', () => {
+            myChart.resize();
+        });
+    </script>
+</body>
+</html>
