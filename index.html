@@ -2,11 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>可配置化 ECharts 柱状图</title>
-    <!-- 引入 ECharts CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <title>可配置化 ECharts 柱状图（折线图文字旋转修复）</title>
+    <script src="echarts.min.js"></script>
     <style>
-        /* 容器样式也可通过JS配置，这里保留基础样式 */
         #chart-container {
             margin: 20px auto;
             border: 1px solid #eee;
@@ -17,203 +15,187 @@
     <div id="chart-container"></div>
 
     <script type="text/javascript">
-        // ===================== 核心配置参数（所有修改都在这里！） =====================
+        // ===================== 核心配置参数 =====================
         const CHART_CONFIG = {
-            // 1. 图表容器配置
             container: {
-                id: 'chart-container',  // 容器ID
-                width: '90%',        // 宽度（支持px/%）
-                height: '90vh',        // 高度（支持px/%）
-                margin: '20px auto'     // 外边距
+                id: 'chart-container',
+                width: '90%',
+                height: '90vh',
+                margin: '20px auto'
+            },
+            
+            yAxisName: {
+                enable: true,
+                position: 'end',
+                align: 'right',
+                rotate: 0,
+                style: { fontSize: 16, color: '#333' },
+                gap: 30
             },
 
-            // 2. 标签文本配置（柱子上的文字）
+            // 双数据集：得分率(折线/平铺柱状) / 分数(堆叠柱状)
+            dataSets: {
+                scoreRate: {
+                    yAxisText: '得分率',
+                    dataList: [
+                        { name: '语文', data: [(0.83*81).toFixed(2) ,(0.83*67.5).toFixed(2), (0.83*89).toFixed(2), (0.83*70).toFixed(2) ] },
+                        { name: '数学', data: [(0.83*109).toFixed(2), (0.83*97).toFixed(2), (0.83*100).toFixed(2), (0.83*102).toFixed(2) ] },
+                        { name: '英语', data: [(0.83*119.5).toFixed(2), (0.83*115).toFixed(2), (0.83*108.5).toFixed(2), (0.83*116).toFixed(2)] },
+                        { name: '政治', data: [(1.33*58).toFixed(2), (1.33*49).toFixed(2), (1.33*47).toFixed(2), (1.33*57).toFixed(2)] },
+                        { name: '历史', data: [(1.66*37).toFixed(2), (1.33*51).toFixed(2), (1.33*51).toFixed(2), (1.33*46).toFixed(2)] },
+                        { name: '地理', data: [(1.66*53).toFixed(2), (1.66*54).toFixed(2), (1.66*49).toFixed(2), (1.66*48).toFixed(2)] },
+                        { name: '生物', data: [(1.66*52).toFixed(2), (1.66*49).toFixed(2), (1.66*49).toFixed(2), 1.66*(54).toFixed(2)] }
+                    ]
+                },
+                score: {
+                    yAxisText: '分数(总分不同)',
+                    dataList: [
+                        { name: '语文', data: [81, 67.5, 89, 70] },
+                        { name: '数学', data: [109, 97, 100, 102] },
+                        { name: '英语', data: [119.5, 115, 108.5, 116] },
+                        { name: '政治', data: [58, 49, 47, 57] },
+                        { name: '历史', data: [37, 51, 51, 46] },
+                        { name: '地理', data: [53, 54, 49, 48] },
+                        { name: '生物', data: [52, 49, 49, 54] }
+
+                    ]
+                }
+            },
+
+            // 标签配置：拆分柱状图/折线图的旋转角度
             label: {
-                show: true,             // 是否显示标签
-                rotate: 90,             // 文字旋转角度（-90~90）
-                align: 'left',          // 水平对齐：left/center/right
-                verticalAlign: 'middle',// 垂直对齐：top/middle/bottom
-                position: 'insideBottom',// 标签位置：top/bottom/inside/insideTop等
-                distance: 15,           // 标签与柱子的距离
-                fontSize: 16,           // 文字大小
-                formatter: '{c}  {name|{a}}', // 标签格式：{c}=值 {a}=系列名 {b}=类目名
-                richStyle: {            // 富文本样式（针对formatter里的name）
-                    name: { color: '#333', fontWeight: 'normal' }
-                }
+                show: true, 
+                barRotate: 90,        // 柱状图/堆叠图：文字旋转90度
+                lineRotate: 0,         // 折线图：文字水平（旋转0度）
+                align: 'left', 
+                verticalAlign: 'middle',
+                position: 'insideBottom', 
+                distance: 15, 
+                fontSize: 16,
+                formatter: '{c}  {name|{a}}', 
+                richStyle: { name: { color: '#333', fontWeight: 'normal' } }
             },
 
-            // 3. 图例配置
             legend: {
-                show: true,             // 是否显示图例
-                data: ['语文', '数学', '英语'], // 图例名称（需和series.name对应）
-                position: {             // 图例位置
-                    left: 'center',     // 水平：left/center/right/数值
-                    top: 'top'          // 垂直：top/middle/bottom/数值
-                },
-                textStyle: {            // 图例文字样式
-                    fontSize: 14,
-                    color: '#666'
-                }
+                show: true,
+                data: ['语文', '数学', '英语', '政治', '历史', '地理', '生物'],
+                position: { left: 'center', top: 'top' },
+                textStyle: { fontSize: 14, color: '#666' }
             },
 
-            // 4. 工具栏配置
             toolbox: {
-                show: true,             // 是否显示工具栏
-                orient: 'vertical',     // 排列方向：horizontal/vertical
-                position: {             // 工具栏位置
-                    left: 'right',
-                    top: 'center'
-                },
-                // 工具栏功能开关（按需开启/关闭）
+                show: true, orient: 'vertical',
+                position: { left: 'right', top: 'center' },
                 feature: {
-                    mark: { show: true },        // 标记工具
-                    dataView: { show: true, readOnly: false }, // 数据视图
-                    magicType: { show: true, type: ['line', 'bar', 'stack'] }, // 图表类型切换
-                    restore: { show: true },     // 重置
-                    saveAsImage: { show: true }  // 保存图片
+                    mark: { show: true },
+                    dataView: { show: true, readOnly: false },
+                    magicType: { show: true, type: ['line', 'bar', 'stack'] },
+                    restore: { show: true },
+                    saveAsImage: { show: true }
                 }
             },
 
-            // 5. 提示框（鼠标悬停提示）配置
             tooltip: {
-                trigger: 'axis',        // 触发方式：axis/item
-                axisPointer: { type: 'shadow' }, // 指示器类型：shadow/line/cross
-                textStyle: { fontSize: 12 },
-                backgroundColor: 'rgba(50,50,50,0.8)', // 背景色
-                textColor: '#fff'       // 文字颜色
+                trigger: 'axis', axisPointer: { type: 'shadow' },
+                textStyle: { fontSize: 12 }, backgroundColor: 'rgba(50,50,50,0.8)', textColor: '#fff'
             },
 
-            // 6. X轴配置
             xAxis: {
-                type: 'category',       // 轴类型：category/value/time
-                axisTick: { show: false }, // 是否显示刻度线
-                axisLine: { show: true },  // 是否显示轴线
-                label: {                // 轴标签样式
-                    fontSize: 14,
-                    color: '#333'
-                },
-                data: ['2025.10', '2025.11', '2025.12', '2026.1'] // X轴类目数据
+                type: 'category', axisTick: { show: false }, axisLine: { show: true },
+                label: { fontSize: 14, color: '#333' },
+                data: ['2025.10', '2025.11', '2025.12', '2026.1'],
+                axisLabel: { interval: 0 },
+                boundaryGap: true
             },
 
-            // 7. Y轴配置
             yAxis: {
-                type: 'value',          // 轴类型：value/category/time
-                axisTick: { show: true },
-                axisLine: { show: true },
-                label: {
-                    fontSize: 14,
-                    color: '#333'
-                },
-                splitLine: { show: true } // 是否显示网格线
+                type: 'value', axisTick: { show: true }, axisLine: { show: true },
+                label: { fontSize: 14, color: '#333' }, splitLine: { show: true }
             },
 
-            // 8. 系列数据配置（柱状图核心数据）
-            series: {
-                type: 'bar',            // 图表类型：bar/line/pie等
-                barGap: 0,              // 同系列柱子间距
-                emphasis: { focus: 'series' }, // 高亮方式：series/item
-                // 各系列数据（name需和legend.data对应）
-                dataList: [
-                    { name: '语文', data: [(0.83*81).toFixed(2) ,(0.83*67.5).toFixed(2), (0.83*89).toFixed(2), (0.83*70).toFixed(2) ] },
-                    { name: '数学', data: [(0.83*109).toFixed(2), (0.83*97).toFixed(2), (0.83*100).toFixed(2), (0.83*102).toFixed(2) ] },
-                    { name: '英语', data: [150, 232, 201, 154 ] }
-                ]
+            seriesBase: {
+                barGap: '0%',
+                barCategoryGap: '20%',
+                emphasis: { focus: 'series' }
             }
         };
-        // ===================== 配置结束（以下代码无需修改） =====================
 
-        // 1. 初始化容器样式（从配置读取）
+        // ===================== 渲染逻辑 =====================
         const container = document.getElementById(CHART_CONFIG.container.id);
         container.style.width = CHART_CONFIG.container.width;
         container.style.height = CHART_CONFIG.container.height;
-
-        // 2. 初始化ECharts实例
         const myChart = echarts.init(container);
+        
+        // 根据图表类型动态生成标签配置（控制文字旋转）
+        function getLabelOption(chartType) {
+            return {
+                show: CHART_CONFIG.label.show,
+                // 折线图用0度（水平），柱状/堆叠用90度
+                rotate: chartType === 'line' ? CHART_CONFIG.label.lineRotate : CHART_CONFIG.label.barRotate,
+                align: CHART_CONFIG.label.align,
+                verticalAlign: CHART_CONFIG.label.verticalAlign,
+                // 折线图调整标签位置，避免遮挡
+                position: chartType === 'line' ? 'top' : CHART_CONFIG.label.position,
+                distance: CHART_CONFIG.label.distance,
+                fontSize: CHART_CONFIG.label.fontSize,
+                formatter: CHART_CONFIG.label.formatter,
+                rich: CHART_CONFIG.label.richStyle
+            };
+        }
 
-        // 3. 组装标签配置（从核心配置读取）
-        const labelOption = {
-            show: CHART_CONFIG.label.show,
-            rotate: CHART_CONFIG.label.rotate,
-            align: CHART_CONFIG.label.align,
-            verticalAlign: CHART_CONFIG.label.verticalAlign,
-            position: CHART_CONFIG.label.position,
-            distance: CHART_CONFIG.label.distance,
-            fontSize: CHART_CONFIG.label.fontSize,
-            formatter: CHART_CONFIG.label.formatter,
-            rich: CHART_CONFIG.label.richStyle
-        };
+        // 生成图表配置
+        function getChartOption(currentType = 'bar') {
+            const isStack = currentType === 'stack';
+            const dataSet = isStack ? CHART_CONFIG.dataSets.score : CHART_CONFIG.dataSets.scoreRate;
+            const chartType = isStack ? 'bar' : currentType;
+            // 动态获取标签配置（根据类型调整旋转角度）
+            const labelOption = getLabelOption(chartType);
 
-        // 4. 组装完整的图表配置项
-        const chartOption = {
-            // 提示框配置
-            tooltip: {
-                trigger: CHART_CONFIG.tooltip.trigger,
-                axisPointer: { type: CHART_CONFIG.tooltip.axisPointer.type },
-                textStyle: {
-                    fontSize: CHART_CONFIG.tooltip.textStyle.fontSize,
-                    color: CHART_CONFIG.tooltip.textColor
+            return {
+                tooltip: {
+                    ...CHART_CONFIG.tooltip,
+                    axisPointer: { type: chartType === 'line' ? 'line' : 'shadow' }
                 },
-                backgroundColor: CHART_CONFIG.tooltip.backgroundColor
-            },
+                legend: CHART_CONFIG.legend,
+                toolbox: CHART_CONFIG.toolbox,
+                xAxis: [{ ...CHART_CONFIG.xAxis }],
+                yAxis: [{
+                    ...CHART_CONFIG.yAxis,
+                    name: CHART_CONFIG.yAxisName.enable ? dataSet.yAxisText : '',
+                    nameLocation: CHART_CONFIG.yAxisName.position,
+                    nameAlign: CHART_CONFIG.yAxisName.align,
+                    nameRotate: CHART_CONFIG.yAxisName.rotate,
+                    nameTextStyle: CHART_CONFIG.yAxisName.style,
+                    nameGap: CHART_CONFIG.yAxisName.gap
+                }],
+                series: dataSet.dataList.map(item => ({
+                    ...CHART_CONFIG.seriesBase,
+                    name: item.name,
+                    type: chartType,
+                    data: item.data,
+                    label: labelOption,
+                    stack: isStack ? 'total' : undefined,
+                    symbol: chartType === 'line' ? 'circle' : undefined,
+                    symbolSize: chartType === 'line' ? 8 : undefined,
+                    barCategoryGap: isStack ? CHART_CONFIG.seriesBase.barCategoryGap : undefined
+                }))
+            };
+        }
 
-            // 图例配置
-            legend: {
-                show: CHART_CONFIG.legend.show,
-                data: CHART_CONFIG.legend.data,
-                left: CHART_CONFIG.legend.position.left,
-                top: CHART_CONFIG.legend.position.top,
-                textStyle: CHART_CONFIG.legend.textStyle
-            },
+        // 初始渲染
+        myChart.setOption(getChartOption('bar'), true);
 
-            // 工具栏配置
-            toolbox: {
-                show: CHART_CONFIG.toolbox.show,
-                orient: CHART_CONFIG.toolbox.orient,
-                left: CHART_CONFIG.toolbox.position.left,
-                top: CHART_CONFIG.toolbox.position.top,
-                feature: CHART_CONFIG.toolbox.feature
-            },
-
-            // X轴配置
-            xAxis: [
-                {
-                    type: CHART_CONFIG.xAxis.type,
-                    axisTick: { show: CHART_CONFIG.xAxis.axisTick.show },
-                    axisLine: { show: CHART_CONFIG.xAxis.axisLine.show },
-                    axisLabel: CHART_CONFIG.xAxis.label,
-                    data: CHART_CONFIG.xAxis.data
-                }
-            ],
-
-            // Y轴配置
-            yAxis: [
-                {
-                    type: CHART_CONFIG.yAxis.type,
-                    axisTick: { show: CHART_CONFIG.yAxis.axisTick.show },
-                    axisLine: { show: CHART_CONFIG.yAxis.axisLine.show },
-                    axisLabel: CHART_CONFIG.yAxis.label,
-                    splitLine: { show: CHART_CONFIG.yAxis.splitLine.show }
-                }
-            ],
-
-            // 系列数据配置（自动遍历数据列表）
-            series: CHART_CONFIG.series.dataList.map(item => ({
-                name: item.name,
-                type: CHART_CONFIG.series.type,
-                barGap: CHART_CONFIG.series.barGap,
-                label: labelOption,
-                emphasis: CHART_CONFIG.series.emphasis,
-                data: item.data
-            }))
-        };
-
-        // 5. 渲染图表
-        myChart.setOption(chartOption);
-
-        // 6. 监听窗口大小变化，自动适配
-        window.addEventListener('resize', () => {
-            myChart.resize();
+        // 监听类型切换
+        myChart.on('magictypechanged', function (params) {
+            const currentType = params.currentType;
+            myChart.setOption(getChartOption(currentType), true);
+            setTimeout(() => {
+                myChart.resize();
+            }, 5000);
         });
+
+        // 窗口自适应
+        window.addEventListener('resize', () => myChart.resize());
     </script>
 </body>
 </html>
