@@ -2,12 +2,14 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>只是个webside</title></title>
+    <title>一个HTML</title>
     <script src="echarts.min.js"></script>
     <style>
         #chart-container {
             margin: 20px auto;
             border: 1px solid #eee;
+            width: 90%;
+            height: 90vh;
         }
     </style>
 </head>
@@ -15,188 +17,224 @@
     <div id="chart-container"></div>
 
     <script type="text/javascript">
-        // ===================== 核心配置参数 =====================
+        // ===================== 核心配置 =====================
         const CHART_CONFIG = {
             container: {
                 id: 'chart-container',
                 width: '90%',
-                height: '90vh',
-                margin: '20px auto'
-            },
-            
-            yAxisName: {
-                enable: true,
-                position: 'end',
-                align: 'right',
-                rotate: 0,
-                style: { fontSize: 16, color: '#333' },
-                gap: 30
+                height: '90vh'
             },
 
-            // 双数据集：得分率(折线/平铺柱状) / 分数(堆叠柱状)
+            // 科目固定颜色（所有图表共用）
+            subjectColor: {
+                '语文': '#c23531',
+                '数学': '#2f4554',
+                '英语': '#61a0a8',
+                '政治': '#d48265',
+                '历史': '#91c7ae',
+                '地理': '#749f83',
+                '生物': '#ca8622'
+            },
+
+            // 时间项颜色（平铺柱状每组内4个时间用区分色）
+            timeColor: [ '#5470c6', '#91cc75', '#fac858', '#ee6666' ],
+            timeName: ['2025.10', '2025.11', '2025.12', '2026.1'],
+
             dataSets: {
                 scoreRate: {
                     yAxisText: '得分率',
+                    xAxisGroup: ['语文','数学','英语','政治','历史','地理','生物'],
                     dataList: [
-                        { name: '语文', data: [(0.83*81).toFixed(2) ,(0.83*67.5).toFixed(2), (0.83*89).toFixed(2), (0.83*70).toFixed(2) ] },
-                        { name: '数学', data: [(0.83*109).toFixed(2), (0.83*97).toFixed(2), (0.83*100).toFixed(2), (0.83*102).toFixed(2) ] },
-                        { name: '英语', data: [(0.83*119.5).toFixed(2), (0.83*115).toFixed(2), (0.83*108.5).toFixed(2), (0.83*116).toFixed(2)] },
-                        { name: '政治', data: [(1.33*58).toFixed(2), (1.33*49).toFixed(2), (1.33*47).toFixed(2), (1.33*57).toFixed(2)] },
-                        { name: '历史', data: [(1.66*37).toFixed(2), (1.33*51).toFixed(2), (1.33*51).toFixed(2), (1.33*46).toFixed(2)] },
-                        { name: '地理', data: [(1.66*53).toFixed(2), (1.66*54).toFixed(2), (1.66*49).toFixed(2), (1.66*48).toFixed(2)] },
-                        { name: '生物', data: [(1.66*52).toFixed(2), (1.66*49).toFixed(2), (1.66*49).toFixed(2), 1.66*(54).toFixed(2)] }
+                        { name: '语文', data: [(0.83*81).toFixed(2),(0.83*67.5).toFixed(2),(0.83*89).toFixed(2),(0.83*70).toFixed(2)] },
+                        { name: '数学', data: [(0.83*109).toFixed(2),(0.83*97).toFixed(2),(0.83*100).toFixed(2),(0.83*102).toFixed(2)] },
+                        { name: '英语', data: [(0.83*119.5).toFixed(2),(0.83*115).toFixed(2),(0.83*108.5).toFixed(2),(0.83*116).toFixed(2)] },
+                        { name: '政治', data: [(1.33*58).toFixed(2),(1.33*49).toFixed(2),(1.33*47).toFixed(2),(1.33*57).toFixed(2)] },
+                        { name: '历史', data: [(1.66*37).toFixed(2),(1.33*51).toFixed(2),(1.33*51).toFixed(2),(1.33*46).toFixed(2)] },
+                        { name: '地理', data: [(1.66*53).toFixed(2),(1.66*54).toFixed(2),(1.66*49).toFixed(2),(1.66*48).toFixed(2)] },
+                        { name: '生物', data: [(1.66*52).toFixed(2),(1.66*49).toFixed(2),(1.66*49).toFixed(2),(1.66*54).toFixed(2)] }
                     ]
                 },
                 score: {
                     yAxisText: '分数(总分不同)',
+                    xAxisStack: ['2025.10','2025.11','2025.12','2026.1'],
                     dataList: [
-                        { name: '语文', data: [81, 67.5, 89, 70] },
-                        { name: '数学', data: [109, 97, 100, 102] },
-                        { name: '英语', data: [119.5, 115, 108.5, 116] },
-                        { name: '政治', data: [58, 49, 47, 57] },
-                        { name: '历史', data: [37, 51, 51, 46] },
-                        { name: '地理', data: [53, 54, 49, 48] },
-                        { name: '生物', data: [52, 49, 49, 54] }
-
+                        { name: '语文', data: [81,67.5,89,70] },
+                        { name: '数学', data: [109,97,100,102] },
+                        { name: '英语', data: [119.5,115,108.5,116] },
+                        { name: '政治', data: [58,49,47,57] },
+                        { name: '历史', data: [37,51,51,46] },
+                        { name: '地理', data: [53,54,49,48] },
+                        { name: '生物', data: [52,49,49,54] }
                     ]
                 }
             },
 
-            // 标签配置：拆分柱状图/折线图的旋转角度
             label: {
-                show: true, 
-                barRotate: 90,        // 柱状图/堆叠图：文字旋转90度
-                lineRotate: 0,         // 折线图：文字水平（旋转0度）
-                align: 'left', 
+                show: true,
+                barRotate: 0,
+                stackRotate: 0,
+                lineRotate: 0,
+                align: 'center',
                 verticalAlign: 'middle',
-                position: 'insideBottom', 
-                distance: 15, 
-                fontSize: 16,
-                formatter: '{c}  {name|{a}}', 
-                richStyle: { name: { color: '#333', fontWeight: 'normal' } }
+                barPosition: 'top',
+                stackPosition: 'inside',
+                linePosition: 'top',
+                distance: 6,
+                fontSize: 10,
+                formatter: '{c}'
             },
 
             legend: {
                 show: true,
-                data: ['语文', '数学', '英语', '政治', '历史', '地理', '生物'],
-                position: { left: 'center', top: 'top' },
-                textStyle: { fontSize: 14, color: '#666' }
+                left: 'center',
+                top: 'top',
+                textStyle: { fontSize:12 }
             },
 
+            // 完整切换工具栏配置（恢复了全部按钮）
             toolbox: {
-                show: true, orient: 'vertical',
-                position: { left: 'right', top: 'center' },
+                show: true,
+                orient: 'vertical',
+                right: 10,
+                top: 'center',
                 feature: {
-                    mark: { show: true },
-                    dataView: { show: true, readOnly: false },
-                    magicType: { show: true, type: ['line', 'bar', 'stack'] },
+                    magicType: { 
+                        show: true,
+                        type: ['line','bar','stack'] 
+                    },
                     restore: { show: true },
-                    saveAsImage: { show: true }
+                    saveAsImage: { show: true },
+                    dataView: { show: true, readOnly: true }
                 }
             },
 
-            tooltip: {
-                trigger: 'axis', axisPointer: { type: 'shadow' },
-                textStyle: { fontSize: 12 }, backgroundColor: 'rgba(50,50,50,0.8)', textColor: '#fff'
-            },
-
             xAxis: {
-                type: 'category', axisTick: { show: false }, axisLine: { show: true },
-                label: { fontSize: 14, color: '#333' },
-                data: ['2025.10', '2025.11', '2025.12', '2026.1'],
-                axisLabel: { interval: 0 },
-                boundaryGap: true
+                type: 'category',
+                axisTick: { show: false },
+                axisLabel: { fontSize:12, interval:0 }
             },
 
             yAxis: {
-                type: 'value', axisTick: { show: true }, axisLine: { show: true },
-                label: { fontSize: 14, color: '#333' }, splitLine: { show: true }
+                type: 'value',
+                nameLocation: 'end',
+                nameGap: 30,
+                nameTextStyle: { fontSize:16, color:'#333' }
             },
 
             seriesBase: {
-                barGap: '0%',
-                barCategoryGap: '20%',
+                barGap: '5%',
+                barCategoryGap: '25%',
                 emphasis: { focus: 'series' }
             }
         };
 
         // ===================== 渲染逻辑 =====================
         const container = document.getElementById(CHART_CONFIG.container.id);
-        container.style.width = CHART_CONFIG.container.width;
-        container.style.height = CHART_CONFIG.container.height;
         const myChart = echarts.init(container);
-        
-        // 根据图表类型动态生成标签配置（控制文字旋转）
-        function getLabelOption(chartType) {
+
+        // 标签配置
+        function getLabel(chartType, isStack){
+            const cfg = CHART_CONFIG.label;
             return {
-                show: CHART_CONFIG.label.show,
-                // 折线图用0度（水平），柱状/堆叠用90度
-                rotate: chartType === 'line' ? CHART_CONFIG.label.lineRotate : CHART_CONFIG.label.barRotate,
-                align: CHART_CONFIG.label.align,
-                verticalAlign: CHART_CONFIG.label.verticalAlign,
-                // 折线图调整标签位置，避免遮挡
-                position: chartType === 'line' ? 'top' : CHART_CONFIG.label.position,
-                distance: CHART_CONFIG.label.distance,
-                fontSize: CHART_CONFIG.label.fontSize,
-                formatter: CHART_CONFIG.label.formatter,
-                rich: CHART_CONFIG.label.richStyle
+                show: cfg.show,
+                rotate: isStack ? cfg.stackRotate : (chartType==='line' ? cfg.lineRotate : cfg.barRotate),
+                align: cfg.align,
+                verticalAlign: cfg.verticalAlign,
+                position: isStack ? cfg.stackPosition : (chartType==='line' ? cfg.linePosition : cfg.barPosition),
+                distance: cfg.distance,
+                fontSize: cfg.fontSize,
+                formatter: cfg.formatter
             };
         }
 
-        // 生成图表配置
-        function getChartOption(currentType = 'bar') {
-            const isStack = currentType === 'stack';
-            const dataSet = isStack ? CHART_CONFIG.dataSets.score : CHART_CONFIG.dataSets.scoreRate;
-            const chartType = isStack ? 'bar' : currentType;
-            // 动态获取标签配置（根据类型调整旋转角度）
-            const labelOption = getLabelOption(chartType);
-
+        // 构造分组平铺柱状图：7科目组，每组4个时间并排
+        function buildGroupBarOption(){
+            const { timeName, timeColor, subjectColor, dataSets } = CHART_CONFIG;
+            const gData = dataSets.scoreRate;
+            const series = [];
+            // 4个时间 = 4个系列，每个系列放7科对应时间的得分
+            timeName.forEach((tn, tIdx) => {
+                const data = gData.dataList.map((subj) => subj.data[tIdx]);
+                series.push({
+                    name: tn,
+                    type: 'bar',
+                    data: data,
+                    label: getLabel('bar', false),
+                    itemStyle: { color: timeColor[tIdx] },
+                    ...CHART_CONFIG.seriesBase
+                });
+            });
             return {
-                tooltip: {
-                    ...CHART_CONFIG.tooltip,
-                    axisPointer: { type: chartType === 'line' ? 'line' : 'shadow' }
-                },
-                legend: CHART_CONFIG.legend,
+                tooltip: { trigger: 'axis', axisPointer: { type:'shadow' } },
+                legend: { data: timeName },
                 toolbox: CHART_CONFIG.toolbox,
-                xAxis: [{ ...CHART_CONFIG.xAxis }],
-                yAxis: [{
-                    ...CHART_CONFIG.yAxis,
-                    name: CHART_CONFIG.yAxisName.enable ? dataSet.yAxisText : '',
-                    nameLocation: CHART_CONFIG.yAxisName.position,
-                    nameAlign: CHART_CONFIG.yAxisName.align,
-                    nameRotate: CHART_CONFIG.yAxisName.rotate,
-                    nameTextStyle: CHART_CONFIG.yAxisName.style,
-                    nameGap: CHART_CONFIG.yAxisName.gap
-                }],
-                series: dataSet.dataList.map(item => ({
-                    ...CHART_CONFIG.seriesBase,
-                    name: item.name,
-                    type: chartType,
-                    data: item.data,
-                    label: labelOption,
-                    stack: isStack ? 'total' : undefined,
-                    symbol: chartType === 'line' ? 'circle' : undefined,
-                    symbolSize: chartType === 'line' ? 8 : undefined,
-                    barCategoryGap: isStack ? CHART_CONFIG.seriesBase.barCategoryGap : undefined
-                }))
+                xAxis: [{ ...CHART_CONFIG.xAxis, data: gData.xAxisGroup, boundaryGap: true }],
+                yAxis: [{ ...CHART_CONFIG.yAxis, name: gData.yAxisText }],
+                series: series
             };
         }
 
-        // 初始渲染
-        myChart.setOption(getChartOption('bar'), true);
+        // 构造折线图：7条线，颜色=科目固定色
+        function buildLineOption(){
+            const { subjectColor, dataSets } = CHART_CONFIG;
+            const gData = dataSets.scoreRate;
+            const series = gData.dataList.map(subj => ({
+                name: subj.name,
+                type: 'line',
+                data: subj.data,
+                label: getLabel('line', false),
+                symbol: 'circle', symbolSize:6,
+                itemStyle: { color: subjectColor[subj.name] },
+                lineStyle: { color: subjectColor[subj.name], width:2 },
+                ...CHART_CONFIG.seriesBase
+            }));
+            return {
+                tooltip: { trigger: 'axis' },
+                legend: { data: gData.dataList.map(s=>s.name) },
+                toolbox: CHART_CONFIG.toolbox,
+                xAxis: [{ ...CHART_CONFIG.xAxis, data: CHART_CONFIG.timeName, boundaryGap: false }],
+                yAxis: [{ ...CHART_CONFIG.yAxis, name: gData.yAxisText }],
+                series: series
+            };
+        }
 
-        // 监听类型切换
-        myChart.on('magictypechanged', function (params) {
-            const currentType = params.currentType;
-            myChart.setOption(getChartOption(currentType), true);
-            setTimeout(() => {
-                myChart.resize();
-            }, 5000);
+        // 构造堆叠图：7科目固定色，按时间堆叠
+        function buildStackOption(){
+            const { subjectColor, dataSets } = CHART_CONFIG;
+            const sData = dataSets.score;
+            const series = sData.dataList.map(subj => ({
+                name: subj.name,
+                type: 'bar',
+                stack: 'total',
+                data: subj.data,
+                label: getLabel('bar', true),
+                itemStyle: { color: subjectColor[subj.name] },
+                ...CHART_CONFIG.seriesBase
+            }));
+            return {
+                tooltip: { trigger: 'axis', axisPointer: { type:'shadow' } },
+                legend: { data: sData.dataList.map(s=>s.name) },
+                toolbox: CHART_CONFIG.toolbox,
+                xAxis: [{ ...CHART_CONFIG.xAxis, data: sData.xAxisStack, boundaryGap: true }],
+                yAxis: [{ ...CHART_CONFIG.yAxis, name: sData.yAxisText }],
+                series: series
+            };
+        }
+
+        // 类型映射
+        const typeMap = { bar: buildGroupBarOption, line: buildLineOption, stack: buildStackOption };
+
+        // 初始平铺分组柱状
+        myChart.setOption(typeMap['bar'](), true);
+
+        // 切换事件
+        myChart.on('magictypechanged', (params) => {
+            const fn = typeMap[params.currentType];
+            myChart.setOption(fn(), true);
+            setTimeout(()=>myChart.resize(), 5000);
         });
 
-        // 窗口自适应
-        window.addEventListener('resize', () => myChart.resize());
+        window.addEventListener('resize', ()=>myChart.resize());
     </script>
 </body>
 </html>
-
