@@ -1,3 +1,1 @@
-<?php
-header("Location: https://api.mtyqx.cn/tapi/random.php");
-?>
+<img src="https://api.mtyqx.cn/tapi/random.php">
